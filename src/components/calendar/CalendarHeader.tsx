@@ -1,3 +1,4 @@
+import { useTheme } from "@/src/contexts/ThemeContext";
 import { getDateInfo } from "@/src/utils/dateHelper";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
@@ -9,14 +10,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
  */
 
 export default function CalendarHeader() {
+  const { theme, toggleTheme } = useTheme();
   const [currentDate] = useState(new Date());
   const { year, month, week } = getDateInfo(currentDate);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {/* 左侧：日期和周数 */}
       <View style={styles.leftSection}>
-        <Text style={styles.dateText}>
+        <Text style={[styles.dateText, { color: theme.colors.text }]}>
           {year}年{month}月
         </Text>
         <Text style={styles.weekText}>第{week}周</Text>
@@ -25,15 +29,23 @@ export default function CalendarHeader() {
       <View style={styles.rightSection}>
         <TouchableOpacity
           style={styles.iconButton}
-          onPress={() => console.log("折叠按钮点击")}
+          onPress={() => toggleTheme()}
         >
-          <Ionicons name="chevron-up-circle-outline" size={28} color="#fff" />
+          <Ionicons
+            name="chevron-up-circle-outline"
+            size={28}
+            color={theme.colors.icon}
+          />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => console.log("菜单按钮点击")}
         >
-          <Ionicons name="ellipsis-vertical" size={28} color="#fff" />
+          <Ionicons
+            name="ellipsis-vertical"
+            size={28}
+            color={theme.colors.icon}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -47,7 +59,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: "#000",
     paddingTop: 50,
   },
   leftSection: {
@@ -58,7 +69,6 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#fff",
   },
   weekText: {
     fontSize: 14,
