@@ -1,16 +1,18 @@
 //*Tab 导航配置
 
-import { useTheme } from "@/src/contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useColorScheme } from "nativewind";
 
 export default function TabLayout() {
-  const { theme } = useTheme();
+  const { colorScheme } = useColorScheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarStyle: { backgroundColor: theme.colors.background },
+        tabBarActiveTintColor: colorScheme === "dark" ? "#0A84FF" : "#007AFF",
+        tabBarStyle: {
+          backgroundColor: colorScheme === "dark" ? "#000000" : "#FFFFFF",
+        },
       }}
     >
       <Tabs.Screen
