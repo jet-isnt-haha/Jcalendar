@@ -2,7 +2,8 @@
  * dateHelper.ts
  * 包含常用的日期辅助函数。
  */
-
+import Holidays, { type HolidaysTypes } from "date-holidays";
+import solarlunar, { type Solar2lunar } from "solarlunar-es";
 /**
  * 获取日期的 ISO 8601 标准周数 (1 - 53)。
  * 标准规定：周一为每周第一天；包含当年第一个周四的周为第 1 周。
@@ -72,4 +73,27 @@ export function getDateInfo(date: Date): {
     month: getMonth(date),
     week: getISOWeekNumber(date),
   };
+}
+
+/**
+ * 获取农历信息
+ * @param date
+ * @returns Solar2lunar
+ */
+export function getLunarDate(date: Date) {
+  return solarlunar.solar2lunar(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    date.getDate()
+  ) as Solar2lunar;
+}
+
+/**
+ * 获取中国法定节假日
+ * @param date
+ * @returns HolidaysTypes.Holiday[] | false
+ */
+export function getHoliday_CN(date: Date): HolidaysTypes.Holiday[] | false {
+  const hd = new Holidays("CN");
+  return hd.isHoliday(date);
 }
