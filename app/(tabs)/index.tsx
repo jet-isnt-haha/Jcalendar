@@ -1,5 +1,12 @@
 //* 首页 -> 日历主界面
-
+/**
+ * 首页 - 日历主页面
+ *
+ * 显示日历的主视图，支持年/月/周/日/日程视图切换
+ *
+ * @page
+ * @route /(tabs)/
+ */
 import CalendarHeader from "@/src/components/calendar/CalendarHeader";
 import MonthView from "@/src/components/calendar/MonthView";
 import ViewTabs from "@/src/components/calendar/ViewTabs";
@@ -8,6 +15,7 @@ import { Stack } from "expo-router";
 import { useMemo, useState } from "react";
 import { View } from "react-native";
 
+/** 视图类型定义 */
 export type ViewType = "year" | "month" | "week" | "day" | "agenda";
 
 export default function HomeScreen() {
@@ -17,6 +25,7 @@ export default function HomeScreen() {
   //当前选中的日期
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  //返回对应key的视图组件的对象
   const viewComponents = useMemo(
     () => ({
       month: (

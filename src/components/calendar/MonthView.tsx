@@ -14,6 +14,16 @@ interface MonthViewProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
 }
+
+/**
+ * 月份网格组件
+ *
+ * 渲染单个月份的日历网格，包含该月的所有周
+ *
+ * @param weeks - 月份的周数组
+ * @param currentMonth
+ * @param screenWidth - 屏幕宽度，用于将MonthView填满FlatList
+ */
 const MonthGrid = memo(
   ({
     weeks,
@@ -45,9 +55,16 @@ const MonthGrid = memo(
     </View>
   )
 );
-
+//显示标注组件displayName
 MonthGrid.displayName = "MonthGrid";
 
+/**
+ * 生成指定月份的周数据
+ *
+ * 包含月份前后的日期以填满完整的日历网格
+ * @param date
+ * @returns {Date[][]}
+ */
 const generateMonthWeeks = (date: Date) => {
   //获取当月所有日期
   const monthStart = startOfMonth(date);

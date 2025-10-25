@@ -6,6 +6,7 @@ interface ViewTabsProps {
   onViewChange: (view: ViewType) => void;
 }
 
+/** 视图Tab类型定义 */
 interface TabItem {
   key: ViewType;
   label: string;
