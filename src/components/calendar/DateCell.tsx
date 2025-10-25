@@ -48,7 +48,7 @@ export default function DateCell({
           </Text>
           {/* 农历日期 */}
           <Text
-            className={`text-[10px] font-medium  dark:text-white ${
+            className={`text-[9px] font-medium  dark:text-white ${
               isSelected && "text-white "
             }  ${
               isToday && !isSelected && "text-[#007AFF] dark:text-[#007AFF]"
