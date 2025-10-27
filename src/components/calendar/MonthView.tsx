@@ -185,7 +185,7 @@ export default function MonthView({
   /**
    * 添加新month到monthArr的头部
    * @param info
-   * @returns
+   * @returns {void}
    */
   const unshiftMonth = (info: { distanceFromStart: number }) => {
     if (monthArr === undefined) return;
@@ -215,7 +215,7 @@ export default function MonthView({
   /**
    * 添加新month到monthArr的尾部
    * @param info
-   * @returns
+   * @returns {void}
    */
   const appendMonth = (info: { distanceFromEnd: number }) => {
     if (monthArr === undefined) return;
@@ -241,6 +241,9 @@ export default function MonthView({
     setMovedIndex(index);
   };
 
+  /**
+   * 确保渲染新monthArr回退到原index
+   */
   useLayoutEffect((): void => {
     if (
       movedIndex !== undefined &&

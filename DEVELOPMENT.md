@@ -175,36 +175,49 @@ const generateMonthWeeks = (date: Date) => {
 **FlatList 配置**
 
 ```typescript
-<FlatList
-  // ==================== 数据源 ====================
-  data={months}
-  renderItem={renderMonth}
-  keyExtractor={(_, index) => index.toString()}
-  // ==================== 布局方向 ====================
-  horizontal={true} // 横向滚动
-  // ==================== 分页行为 ====================
-  pagingEnabled={true} // 开启分页模式
-  snapToInterval={screenWidth} // 每次滑动一个屏幕宽度
-  snapToAlignment="start" // 对齐到起始位置
-  disableIntervalMomentum={true} // 禁用连续滑动（每次只滑一页）
-  // ==================== 滑动体验 ====================
-  decelerationRate="fast" // 快速减速停止
-  showsHorizontalScrollIndicator={false} // 隐藏横向滚动条
-  // ==================== 性能优化（渲染策略） ====================
-  windowSize={5} // 渲染窗口大小（当前+前后各2屏）
-  initialNumToRender={3} // 首次加载渲染3个项目
-  maxToRenderPerBatch={1} // 每批次最多渲染1个项目
-  updateCellsBatchingPeriod={200} // 批量更新间隔200ms
-  removeClippedSubviews={false} // 不移除屏幕外视图（避免闪烁）
-  // ==================== 性能优化（布局计算） ====================
-  getItemLayout={(_, index) => ({
-    // 预定义项目尺寸（跳过测量）
-    length: screenWidth, // 每项宽度
-    offset: screenWidth * index, // 偏移量
-    index, // 索引
-  })}
-  initialScrollIndex={1} // 初始滚动到第1个项目（从中间开始）
-/>
+{
+  monthArr !== undefined && (
+    <FlatList
+      // ==================== 数据源 ====================
+      data={monthArr}
+      renderItem={renderMonth}
+      keyExtractor={(item, index) => {
+        const firstDayOfMonth = item[0].find((date) => date.getDate() === 1);
+        if (firstDayOfMonth) {
+          return `${firstDayOfMonth.getFullYear()}-${firstDayOfMonth.getMonth()}`;
+        }
+        return index.toString();
+      }}
+      // ==================== 布局方向 ====================
+      horizontal={true} // 横向滚动
+      // ==================== 分页行为 ====================
+      pagingEnabled={true} // 开启分页模式
+      snapToInterval={monthItemWidth} // 每次滑动一个屏幕宽度
+      snapToAlignment="start" // 对齐到起始位置
+      disableIntervalMomentum={true} // 禁用连续滑动（每次只滑一页）
+      // ==================== 滑动体验 ====================
+      decelerationRate="fast" // 快速减速停止
+      showsHorizontalScrollIndicator={false} // 隐藏横向滚动条
+      // ==================== 性能优化（渲染策略） ====================
+      updateCellsBatchingPeriod={200} // 批量更新间隔200ms
+      removeClippedSubviews={false} // 不移除屏幕外视图（避免闪烁）
+      // ==================== 性能优化（布局计算） ====================
+      getItemLayout={(_, index) => ({
+        // 预定义项目尺寸（跳过测量）
+        length: monthItemWidth, // 每项宽度
+        offset: monthItemWidth * index, // 偏移量
+        index, // 索引
+      })}
+      initialScrollIndex={monthArr.length / 2 - 1} // 初始滚动到第1个项目（从中间开始）
+      // ==================== 添加month事件并回滚 ====================
+      ref={monthFlatListRef}
+      onStartReachedThreshold={0.5}
+      onStartReached={unshiftMonth}
+      onEndReachedThreshold={0.5}
+      onEndReached={appendMonth}
+    />
+  );
+}
 ```
 
 **组件缓存**
@@ -212,6 +225,98 @@ const generateMonthWeeks = (date: Date) => {
 - 使用 `memo` 缓存 `MonthGrid` 组件
 - 使用 `useMemo` 缓存月份数据
 - 使用 `useCallback` 缓存渲染函数
+
+#### 2.3 月视图的动态加载
+
+```typescript
+
+/**
+   * 添加新month到monthArr的头部
+   * @param info
+   * @returns {void}
+   */
+  const unshiftMonth = (info: { distanceFromStart: number }) => {
+    if (monthArr === undefined) return;
+    console.log("unshift");
+    const index = 0;
+    const startIndexDate = monthArr[index][0].find(
+      (date) => date.getDate() === 1
+    );
+
+    if (startIndexDate === undefined) return;
+    const newMonthArr = [
+      generateMonthWeeks(
+        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 3, 1)
+      ),
+      generateMonthWeeks(
+        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 2, 1)
+      ),
+      generateMonthWeeks(
+        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 1, 1)
+      ),
+    ];
+
+    setMonthArr([...newMonthArr, ...monthArr]);
+
+    setMovedIndex(index + newMonthArr.length);
+  };
+  /**
+   * 添加新month到monthArr的尾部
+   * @param info
+   * @returns {void}
+   */
+  const appendMonth = (info: { distanceFromEnd: number }) => {
+    if (monthArr === undefined) return;
+    const index = monthArr!.length - 1;
+    console.log("append");
+    const startIndexDate = monthArr[index][0].find(
+      (date) => date.getDate() === 1
+    );
+    if (startIndexDate === undefined) return;
+    const newMonthArr = [
+      generateMonthWeeks(
+        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 1, 1)
+      ),
+      generateMonthWeeks(
+        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 2, 1)
+      ),
+      generateMonthWeeks(
+        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 3, 1)
+      ),
+    ];
+
+    setMonthArr([...monthArr, ...newMonthArr]);
+    setMovedIndex(index);
+  };
+
+  /**
+   * 确保渲染新monthArr回退到原index
+   */
+  useLayoutEffect((): void => {
+    if (
+      movedIndex !== undefined &&
+      monthArr !== undefined &&
+      monthFlatListRef.current !== undefined
+    ) {
+      monthFlatListRef.current?.scrollToIndex({
+        index: movedIndex,
+        animated: false,
+      });
+    }
+  }, [monthArr, movedIndex]);
+
+
+//FlatList内部
+ // ==================== 添加month事件并回滚 ====================
+          ref={monthFlatListRef}
+          onStartReachedThreshold={0.5}
+          onStartReached={unshiftMonth}
+          onEndReachedThreshold={0.5}
+          onEndReached={appendMonth}
+```
+
+**存在问题**
+`Expo Go` 端动态加载缓慢容易报错,渲染不稳定易出现闪烁
 
 ---
 
@@ -230,7 +335,7 @@ const generateMonthWeeks = (date: Date) => {
 // 优先级：今日选中 > 普通选中 > 今日 > 普通
 <View
   className={`w-8 h-8 rounded-2xl items-center justify-center mb-0.5  ${
-    isSelected && "bg-[#696969] dark:bg-[#adb7c2]"
+    isSelected && !isToday && "bg-[#696969] dark:bg-[#adb7c2]"
   } ${isToday && isSelected && "bg-[#2b7df8] dark:bg-[#2b7df8]"}`}
 >
   <Text
