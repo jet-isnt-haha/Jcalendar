@@ -34,7 +34,7 @@ export default function DateCell({
         {/* 公里日期 */}
         <View
           className={`w-8 h-8 rounded-2xl items-center justify-center mb-0.5  ${
-            isSelected && "bg-[#696969] dark:bg-[#adb7c2]"
+            isSelected && !isToday && "bg-[#696969] dark:bg-[#adb7c2]"
           } ${isToday && isSelected && "bg-[#2b7df8] dark:bg-[#2b7df8]"}`}
         >
           <Text
