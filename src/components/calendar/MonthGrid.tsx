@@ -45,7 +45,7 @@ function MonthGrid({
                 className={`flex-1 aspect-[1px] p-1 `}
               >
                 <View className="flex-1 items-center justify-center">
-                  {/* 公里日期 */}
+                  {/* 公历日期 */}
                   <View
                     className={`w-8 h-8 rounded-2xl items-center justify-center mb-0.5  `}
                   >

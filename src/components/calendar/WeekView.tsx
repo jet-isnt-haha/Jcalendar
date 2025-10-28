@@ -1,13 +1,11 @@
 import { SCREEN_WIDTH } from "@/src/constants";
 import {
-  addMonths,
+  addWeeks,
   eachDayOfInterval,
-  endOfMonth,
-  startOfMonth,
+  endOfWeek,
   startOfWeek,
-  subMonths,
+  subWeeks,
 } from "date-fns";
-import { HolidaysTypes } from "date-holidays";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -17,96 +15,58 @@ import {
   Text,
   View,
 } from "react-native";
-import { Solar2lunar } from "solarlunar-es";
-import MonthGrid from "./MonthGrid";
+import WeekGrid from "./WeekGrid";
 
-interface MonthViewProps {
+/**
+ * 周组件类型定义
+ */
+interface WeekViewProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
 }
 
-export interface DateInfo {
-  date: Date;
-  lunarInfo?: Solar2lunar;
-  holiday?: HolidaysTypes.Holiday[] | false;
-}
-
 /**
- * 生成指定月份的周数据数组
- *
- * 包含月份前后的日期以填满完整的日历网格
+ * 生成指定月份的周数据
  * @param date
- * @returns {(Date | null)[][]}
+ * @returns {Date[]}
  */
-const generateMonthWeeks = (date: Date): (Date | null)[][] => {
-  //获取当月所有日期
-  const monthStart = startOfMonth(date);
-  const monthEnd = endOfMonth(date);
+const generateMonthWeek = (date: Date): Date[] => {
+  const calendarStart = startOfWeek(date);
+  const calendarEnd = endOfWeek(date);
 
-  //获取显示范围（包括前后月份的日期以填满日历网格）
-  const calendarStart = startOfWeek(monthStart);
-
-  const allDates = eachDayOfInterval({
+  const week = eachDayOfInterval({
     start: calendarStart,
-    end: monthEnd,
+    end: calendarEnd,
   });
-
-  //预计算农历和节假日数据
-  // const enrichedDates = allDates.map((date) => ({
-  //   date: date,
-  //   lunarInfo: getLunarDate(date),
-  //   holiday: getHoliday_CN(date),
-  // }));
-  //将日期按周分组
-  const weeks: (Date | null)[][] = [];
-
-  let currentWeek: (Date | null)[] = [];
-  allDates.forEach((day) => {
-    currentWeek.push(day);
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
-    }
-  });
-
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push(null);
-    }
-    weeks.push(currentWeek);
-  }
-
-  return weeks;
+  return week;
 };
 
-export default function MonthView({
+export default function WeekView({
   selectedDate,
   onDateSelect,
-}: MonthViewProps) {
+}: WeekViewProps) {
   const [todayDate] = useState<Date>(new Date());
   const [currentDate, setCurrentDate] = useState<Date>(
-    startOfMonth(selectedDate)
+    startOfWeek(selectedDate)
   );
-  const monthFlatListRef = useRef<FlatList>(null);
+  const weekFlatListRef = useRef<FlatList>(null);
   const isScrollingRef = useRef(false);
-  const months = useMemo(() => {
-    const prev = generateMonthWeeks(subMonths(currentDate, 1));
-    const current = generateMonthWeeks(currentDate);
-    const next = generateMonthWeeks(addMonths(currentDate, 1));
+  const weeks = useMemo(() => {
+    const prev = generateMonthWeek(subWeeks(currentDate, 1));
+    const current = generateMonthWeek(currentDate);
+    const next = generateMonthWeek(addWeeks(currentDate, 1));
     return [prev, current, next];
   }, [currentDate]);
-
   //星期标题
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
   /**
-   * 渲染月视图
+   * 渲染周视图
    */
-  const renderMonth = useCallback(
-    ({ item: weeks }: { item: (Date | null)[][] }) => (
-      <MonthGrid
-        weeks={weeks}
-        currentMonth={selectedDate.getMonth()}
+  const renderWeek = useCallback(
+    ({ item: week }: { item: Date[] }) => (
+      <WeekGrid
+        week={week}
         screenWidth={SCREEN_WIDTH}
         todayDate={todayDate}
         selectedDate={selectedDate}
@@ -114,11 +74,10 @@ export default function MonthView({
     ),
     [selectedDate, todayDate]
   );
-
   /**
-   * FlatList滑动事件处理函数
+   * FlatList onMomentumScrollEnd方法函数
    *
-   * 通过滑动动态加载下一张月视图并处理对应状态变量
+   * 通过滑动动态加载下一张周视图并处理对应状态变量
    * @param {e: NativeSyntheticEvent<NativeScrollEvent>}
    * @returns {void}
    */
@@ -133,20 +92,19 @@ export default function MonthView({
       //获取page
       const offsetX = e.nativeEvent.contentOffset.x;
       const page = Math.round(offsetX / SCREEN_WIDTH);
-      console.log(page);
 
       if (page === 2) {
         isScrollingRef.current = true;
-        const next = addMonths(currentDate, 1);
+        const next = addWeeks(currentDate, 1);
         setCurrentDate(next);
         onDateSelect(next);
-        monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        weekFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
       } else if (page === 0) {
         isScrollingRef.current = true;
-        const prev = subMonths(currentDate, 1);
+        const prev = subWeeks(currentDate, 1);
         setCurrentDate(prev);
         onDateSelect(prev);
-        monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        weekFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
       }
     },
     [currentDate]
@@ -155,7 +113,7 @@ export default function MonthView({
   return (
     <ScrollView className="flex-1 dark:bg-[#000000]">
       {/* 星期标题行 */}
-      <View className="flex-row py-3 border-b-[0.5px] border-b-[#d7d7d7] dark:border-b-[#323232]">
+      <View className="flex-row py-3 px-3 border-b-[0.5px] border-b-[#d7d7d7] dark:border-b-[#323232]">
         {weekDays.map((day) => (
           <View key={day} className="flex-1 items-center">
             <Text className="text-[13px] dark:color-[#e0e0e0] font-medium">
@@ -165,12 +123,12 @@ export default function MonthView({
         ))}
       </View>
       <FlatList
-        ref={monthFlatListRef}
-        data={months}
+        ref={weekFlatListRef}
+        data={weeks}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        renderItem={renderMonth}
+        renderItem={renderWeek}
         keyExtractor={(_, i) => i.toString()}
         initialScrollIndex={1}
         getItemLayout={(_, i) => ({

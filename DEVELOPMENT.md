@@ -482,6 +482,12 @@ export function getHoliday_CN(date: Date) {
 
 ---
 
+### 5. 周视图 (`src/components/calendar/WeekView.tsx`)
+
+> 参考实现：[How to make a horizontal calendar slider in React Native with Flatlist (long story)](https://a2nb.medium.com/how-to-make-a-horizontal-calendar-slider-in-react-native-with-flatlist-f1797ffa4dee)(ps:月视图也有一部分参考)
+
+---
+
 ## 技术实现
 
 ### 1. 深色模式

@@ -10,6 +10,7 @@
 import CalendarHeader from "@/src/components/calendar/CalendarHeader";
 import MonthView from "@/src/components/calendar/MonthView";
 import ViewTabs from "@/src/components/calendar/ViewTabs";
+import WeekView from "@/src/components/calendar/WeekView";
 import { useViewCache } from "@/src/hooks/useViewCache";
 import { Stack } from "expo-router";
 import { useMemo, useState } from "react";
@@ -31,7 +32,9 @@ export default function HomeScreen() {
       month: (
         <MonthView selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       ),
-      week: <View className="flex-1" />,
+      week: (
+        <WeekView selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+      ),
       year: <View className="flex-1" />,
       day: <View className="flex-1" />,
       agenda: <View className="flex-1" />,
