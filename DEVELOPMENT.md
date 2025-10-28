@@ -134,6 +134,33 @@ HomeScreen
 
 ### 2. 月视图 (`src/components/calendar/MonthView.tsx`)
 
+**基础属性与基本元素**
+
+```typescript
+//组件类型定义
+interface MonthViewProps {
+  selectedDate: Date;
+  onDateSelect: (date: Date) => void;
+}
+
+const [todayDate] = useState<Date>(new Date());
+//当前日期通过切换月视图进行变换，（通常为某月一日）
+const [currentDate, setCurrentDate] = useState<Date>(
+  startOfMonth(selectedDate)
+);
+const monthFlatListRef = useRef<FlatList>(null);
+//防抖标志ref
+const isScrollingRef = useRef(false);
+
+//FlatList将要渲染的月视图数组
+const months = useMemo(() => {
+  const prev = generateMonthWeeks(subMonths(currentDate, 1));
+  const current = generateMonthWeeks(currentDate);
+  const next = generateMonthWeeks(addMonths(currentDate, 1));
+  return [prev, current, next];
+}, [currentDate]);
+```
+
 **核心功能**
 
 - 显示当前月份的日历网格
@@ -146,33 +173,58 @@ HomeScreen
 
 ```typescript
 // 关键函数：generateMonthWeeks
+/**
+ * 生成指定月份的周数据
+ *
+ * 包含月份前后的日期以填满完整的日历网格
+ * @param date
+ * @returns {Date[][]}
+ */
 const generateMonthWeeks = (date: Date) => {
-  // 1. 获取月份起止日期
+  //获取当月所有日期
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(date);
 
-  // 2. 扩展到完整周（包括上月尾和下月头）
-  const calendarStart = startOfWeek(monthStart, { locale: zhCN });
-  const calendarEnd = endOfWeek(monthEnd, { locale: zhCN });
+  //获取显示范围（包括前后月份的日期以填满日历网格）
+  const calendarStart = startOfWeek(monthStart);
 
-  // 3. 生成日期区间
   const allDates = eachDayOfInterval({
     start: calendarStart,
-    end: calendarEnd,
+    end: monthEnd,
   });
 
-  // 4. 按周分组（7 天一组）
-  const weeks: Date[][] = [];
-  for (let i = 0; i < allDates.length; i += 7) {
-    weeks.push(allDates.slice(i, i + 7));
+  //预计算农历和节假日数据
+  // const enrichedDates = allDates.map((date) => ({
+  //   date: date,
+  //   lunarInfo: getLunarDate(date),
+  //   holiday: getHoliday_CN(date),
+  // }));
+  //将日期按周分组
+  const weeks: (Date | null)[][] = [];
+
+  let currentWeek: (Date | null)[] = [];
+  allDates.forEach((day) => {
+    currentWeek.push(day);
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+  });
+
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push(null);
+    }
+    weeks.push(currentWeek);
   }
+
   return weeks;
 };
 ```
 
 #### 2.2 性能优化策略
 
-**FlatList 配置**
+**FlatList 配置（说明作用）**
 
 ```typescript
 {
@@ -229,94 +281,73 @@ const generateMonthWeeks = (date: Date) => {
 #### 2.3 月视图的动态加载
 
 ```typescript
-
 /**
-   * 添加新month到monthArr的头部
-   * @param info
-   * @returns {void}
-   */
-  const unshiftMonth = (info: { distanceFromStart: number }) => {
-    if (monthArr === undefined) return;
-    console.log("unshift");
-    const index = 0;
-    const startIndexDate = monthArr[index][0].find(
-      (date) => date.getDate() === 1
-    );
-
-    if (startIndexDate === undefined) return;
-    const newMonthArr = [
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 3, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 2, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 1, 1)
-      ),
-    ];
-
-    setMonthArr([...newMonthArr, ...monthArr]);
-
-    setMovedIndex(index + newMonthArr.length);
-  };
-  /**
-   * 添加新month到monthArr的尾部
-   * @param info
-   * @returns {void}
-   */
-  const appendMonth = (info: { distanceFromEnd: number }) => {
-    if (monthArr === undefined) return;
-    const index = monthArr!.length - 1;
-    console.log("append");
-    const startIndexDate = monthArr[index][0].find(
-      (date) => date.getDate() === 1
-    );
-    if (startIndexDate === undefined) return;
-    const newMonthArr = [
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 1, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 2, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 3, 1)
-      ),
-    ];
-
-    setMonthArr([...monthArr, ...newMonthArr]);
-    setMovedIndex(index);
-  };
-
-  /**
-   * 确保渲染新monthArr回退到原index
-   */
-  useLayoutEffect((): void => {
-    if (
-      movedIndex !== undefined &&
-      monthArr !== undefined &&
-      monthFlatListRef.current !== undefined
-    ) {
-      monthFlatListRef.current?.scrollToIndex({
-        index: movedIndex,
-        animated: false,
-      });
+ * FlatList滑动事件处理函数
+ *
+ * 通过滑动动态加载下一张月视图并处理对应状态变量
+ * @param {e: NativeSyntheticEvent<NativeScrollEvent>}
+ * @returns {void}
+ */
+const handleMomentumScrollEnd = useCallback(
+  (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    //设置防抖标志避免scrollToIndex({ index: 1, animated: false })后再次触发
+    if (isScrollingRef.current) {
+      isScrollingRef.current = false;
+      return;
     }
-  }, [monthArr, movedIndex]);
 
+    //获取page
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const page = Math.round(offsetX / SCREEN_WIDTH);
+    console.log(page);
+
+    if (page === 2) {
+      isScrollingRef.current = true;
+      const next = addMonths(currentDate, 1);
+      setCurrentDate(next);
+      onDateSelect(next);
+      monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
+    } else if (page === 0) {
+      isScrollingRef.current = true;
+      const prev = subMonths(currentDate, 1);
+      setCurrentDate(prev);
+      onDateSelect(prev);
+      monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
+    }
+  },
+  [currentDate]
+);
 
 //FlatList内部
- // ==================== 添加month事件并回滚 ====================
-          ref={monthFlatListRef}
-          onStartReachedThreshold={0.5}
-          onStartReached={unshiftMonth}
-          onEndReachedThreshold={0.5}
-          onEndReached={appendMonth}
+// ==================== 添加month事件并回滚 ====================
+ref = { monthFlatListRef };
+onMomentumScrollEnd = { handleMomentumScrollEnd };
+decelerationRate = "fast";
 ```
 
-**存在问题**
-`Expo Go` 端动态加载缓慢容易报错,渲染不稳定易出现闪烁
+#### 2.4 月视图网格组件
+
+```typescript
+/**
+ * 月视图网格类型定义
+ */
+interface MonthGridProps {
+  weeks: (Date | null)[][];
+  currentMonth: number;
+  screenWidth: number;
+  todayDate: Date;
+  selectedDate: Date;
+}
+//dateInfo若为空则返回空单元格。
+  {weeks.map((week, index) => (
+          {week.map((dateInfo, index) =>
+            !dateInfo ? ():())
+          }))
+  }
+
+
+export default memo(MonthGrid);
+```
 
 ---
 
@@ -651,6 +682,10 @@ A: 检查 `solarlunar-es` 的日期参数是否为 `getMonth() + 1`（月份从 
 - ✅ 集成农历和节假日显示
 - ✅ 深色模式支持
 - ✅ 视图切换系统
+
+#### (2025-10-28)
+
+- ✅ 月视图动态加载
 
 ---
 

@@ -1,33 +1,27 @@
-import { getHoliday_CN, getLunarDate } from "@/src/utils/dateHelper";
 import { format } from "date-fns";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 interface DateCellProps {
-  date: Date;
+  dateInfo: Date;
   isCurrentMonth: boolean;
   isSelected: boolean;
   isToday: boolean;
   onPress: () => void;
 }
 
-export default function DateCell({
-  date,
-  isCurrentMonth,
-  isSelected,
-  isToday,
-  onPress,
+function DateCell({
+  dateInfo = new Date(0),
+  isCurrentMonth = false,
+  isSelected = false,
+  isToday = false,
+  onPress = () => {},
 }: DateCellProps) {
+  const date = dateInfo;
   const dayNumber = format(date, "d");
 
-  //获取农历信息
-  const lunarInfo = getLunarDate(date);
-
-  //获取中国节假日信息
-  const holiday = getHoliday_CN(date);
-
   //判断是否显示农历信息 （初一显示月份，其他显示日期）
-  const lunarText = lunarInfo.lDay === 1 ? lunarInfo.monthCn : lunarInfo.dayCn;
+  // const lunarText = lunarInfo.lDay === 1 ? lunarInfo.monthCn : lunarInfo.dayCn;
   return (
-    <TouchableOpacity
+    <Pressable
       className={`flex-1 aspect-[1px] p-1 ${!isCurrentMonth && "opacity-30"}`}
     >
       <View className="flex-1 items-center justify-center">
@@ -47,7 +41,7 @@ export default function DateCell({
             {dayNumber}
           </Text>
           {/* 农历日期 */}
-          <Text
+          {/* <Text
             className={`text-[9px] font-medium  dark:text-white ${
               isSelected && "text-white "
             }  ${
@@ -55,11 +49,13 @@ export default function DateCell({
             } `}
           >
             {holiday === false ? lunarText : holiday[0].name}
-          </Text>
+          </Text> */}
         </View>
         {/* 事件指示点 */}
         {/*   <View className=""></View> */}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
+
+export default DateCell;

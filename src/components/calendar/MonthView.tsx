@@ -1,89 +1,34 @@
 import {
+  addMonths,
   eachDayOfInterval,
   endOfMonth,
-  endOfWeek,
   startOfMonth,
   startOfWeek,
+  subMonths,
 } from "date-fns";
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { HolidaysTypes } from "date-holidays";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
-  ScaledSize,
-  ScrollView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Text,
   View,
 } from "react-native";
-import DateCell from "./DateCell";
+import { Solar2lunar } from "solarlunar-es";
+import MonthGrid from "./MonthGrid";
 
 interface MonthViewProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
 }
 
-/**
- * 月份网格组件
- *
- * 渲染单个月份的日历网格，包含该月的所有周
- *
- * @param weeks - 月份的周数组
- * @param currentMonth
- * @param screenWidth - 屏幕宽度，用于将MonthView填满FlatList
- * @param todayDate - 今日日期
- * @param selectedDate - 被选中的日期
- */
-const MonthGrid = memo(
-  ({
-    weeks,
-    currentMonth,
-    screenWidth,
-    todayDate,
-    selectedDate,
-  }: {
-    weeks: Date[][];
-    currentMonth: number;
-    screenWidth: number;
-    todayDate: Date;
-    selectedDate: Date;
-  }) => (
-    <View style={{ width: screenWidth }} className="gap-y-4">
-      {weeks.map((week, index) => (
-        <View
-          key={index}
-          className="flex-row border-t-[0.5px] border-t-[#d7d7d7] dark:border-t-[#323232]"
-        >
-          {week.map((date) => (
-            <DateCell
-              key={date.toISOString()}
-              date={date}
-              isCurrentMonth={date.getMonth() === currentMonth}
-              isSelected={
-                date.getDate() === selectedDate.getDate() &&
-                date.getMonth() === selectedDate.getMonth() &&
-                date.getFullYear() === selectedDate.getFullYear()
-              }
-              isToday={
-                date.getDate() === todayDate.getDate() &&
-                date.getMonth() === todayDate.getMonth() &&
-                date.getFullYear() === todayDate.getFullYear()
-              }
-              onPress={() => console.log("pressed")}
-            />
-          ))}
-        </View>
-      ))}
-    </View>
-  )
-);
-//显示标注组件displayName
-MonthGrid.displayName = "MonthGrid";
+export interface DateInfo {
+  date: Date;
+  lunarInfo?: Solar2lunar;
+  holiday?: HolidaysTypes.Holiday[] | false;
+}
 
 /**
  * 生成指定月份的周数据
@@ -99,166 +44,115 @@ const generateMonthWeeks = (date: Date) => {
 
   //获取显示范围（包括前后月份的日期以填满日历网格）
   const calendarStart = startOfWeek(monthStart);
-  const calendarEnd = endOfWeek(monthEnd);
+
   const allDates = eachDayOfInterval({
     start: calendarStart,
-    end: calendarEnd,
+    end: monthEnd,
   });
+
+  //预计算农历和节假日数据
+  // const enrichedDates = allDates.map((date) => ({
+  //   date: date,
+  //   lunarInfo: getLunarDate(date),
+  //   holiday: getHoliday_CN(date),
+  // }));
   //将日期按周分组
-  const weeks: Date[][] = [];
-  for (let i = 0; i < allDates.length; i += 7) {
-    weeks.push(allDates.slice(i, i + 7));
+  const weeks: (Date | null)[][] = [];
+
+  let currentWeek: (Date | null)[] = [];
+  allDates.forEach((day) => {
+    currentWeek.push(day);
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+  });
+
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push(null);
+    }
+    weeks.push(currentWeek);
   }
+
   return weeks;
 };
-
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export default function MonthView({
   selectedDate,
   onDateSelect,
 }: MonthViewProps) {
-  const windowDimensions: ScaledSize = Dimensions.get("window");
-  const [monthItemWidth, setMonthItemWidth] = useState<number>(0);
-  const [monthArr, setMonthArr] = useState<Date[][][] | undefined>(undefined);
-  const [todayDate, setTodayDate] = useState<Date>(new Date());
-  const [movedIndex, setMovedIndex] = useState<number | undefined>(undefined);
+  const [todayDate] = useState<Date>(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(
+    startOfMonth(selectedDate)
+  );
   const monthFlatListRef = useRef<FlatList>(null);
-
-  /**
-   * 初始化单月视图尺寸与月数组
-   */
-  useEffect((): void => {
-    setMonthItemWidth(windowDimensions.width);
-    setMonthArr([
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() - 4, 1)
-      ),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() - 3, 1)
-      ),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1)
-      ),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)
-      ),
-      generateMonthWeeks(new Date()),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
-      ),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() + 2, 1)
-      ),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() + 3, 1)
-      ),
-      generateMonthWeeks(
-        new Date(new Date().getFullYear(), new Date().getMonth() + 4, 1)
-      ),
-    ]);
-  }, []);
-
-  /**
-   * 计算今日日期，并初始化
-   */
-  useEffect((): void => {
-    if (monthArr !== undefined) {
-      setTodayDate(new Date());
-    }
-  }, [monthArr]);
+  const isScrollingRef = useRef(false);
+  const months = useMemo(() => {
+    const prev = generateMonthWeeks(subMonths(currentDate, 1));
+    const current = generateMonthWeeks(currentDate);
+    const next = generateMonthWeeks(addMonths(currentDate, 1));
+    return [prev, current, next];
+  }, [currentDate]);
 
   //星期标题
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
+  /**
+   * 渲染月视图
+   */
   const renderMonth = useCallback(
-    ({ item: weeks }: { item: Date[][] }) => (
+    ({ item: weeks }: { item: (Date | null)[][] }) => (
       <MonthGrid
         weeks={weeks}
         currentMonth={selectedDate.getMonth()}
-        screenWidth={monthItemWidth}
+        screenWidth={SCREEN_WIDTH}
         todayDate={todayDate}
         selectedDate={selectedDate}
       />
     ),
-    [selectedDate, monthItemWidth, todayDate]
+    [selectedDate, todayDate]
   );
 
   /**
-   * 添加新month到monthArr的头部
-   * @param info
+   * FlatList滑动事件处理函数
+   *
+   * 通过滑动动态加载下一张月视图并处理对应状态变量
+   * @param {e: NativeSyntheticEvent<NativeScrollEvent>}
    * @returns {void}
    */
-  const unshiftMonth = (info: { distanceFromStart: number }) => {
-    if (monthArr === undefined) return;
-    console.log("unshift");
-    const index = 0;
-    const startIndexDate = monthArr[index][0].find(
-      (date) => date.getDate() === 1
-    );
+  const handleMomentumScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      //设置防抖标志避免scrollToIndex({ index: 1, animated: false })后再次触发
+      if (isScrollingRef.current) {
+        isScrollingRef.current = false;
+        return;
+      }
 
-    if (startIndexDate === undefined) return;
-    const newMonthArr = [
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 3, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 2, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() - 1, 1)
-      ),
-    ];
+      //获取page
+      const offsetX = e.nativeEvent.contentOffset.x;
+      const page = Math.round(offsetX / SCREEN_WIDTH);
+      console.log(page);
 
-    setMonthArr([...newMonthArr, ...monthArr]);
-
-    setMovedIndex(index + newMonthArr.length);
-  };
-  /**
-   * 添加新month到monthArr的尾部
-   * @param info
-   * @returns {void}
-   */
-  const appendMonth = (info: { distanceFromEnd: number }) => {
-    if (monthArr === undefined) return;
-    const index = monthArr!.length - 1;
-    console.log("append");
-    const startIndexDate = monthArr[index][0].find(
-      (date) => date.getDate() === 1
-    );
-    if (startIndexDate === undefined) return;
-    const newMonthArr = [
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 1, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 2, 1)
-      ),
-      generateMonthWeeks(
-        new Date(startIndexDate.getFullYear(), startIndexDate.getMonth() + 3, 1)
-      ),
-    ];
-
-    setMonthArr([...monthArr, ...newMonthArr]);
-    setMovedIndex(index);
-  };
-
-  /**
-   * 确保渲染新monthArr回退到原index
-   */
-  useLayoutEffect((): void => {
-    if (
-      movedIndex !== undefined &&
-      monthArr !== undefined &&
-      monthFlatListRef.current !== undefined
-    ) {
-      monthFlatListRef.current?.scrollToIndex({
-        index: movedIndex,
-        animated: false,
-      });
-    }
-  }, [monthArr, movedIndex]);
+      if (page === 2) {
+        isScrollingRef.current = true;
+        const next = addMonths(currentDate, 1);
+        setCurrentDate(next);
+        onDateSelect(next);
+        monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
+      } else if (page === 0) {
+        isScrollingRef.current = true;
+        const prev = subMonths(currentDate, 1);
+        setCurrentDate(prev);
+        onDateSelect(prev);
+        monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
+      }
+    },
+    [currentDate]
+  );
 
   return (
-    <ScrollView className="flex-1 dark:bg-[#000000]">
+    <View className="flex-1 dark:bg-[#000000]">
       {/* 星期标题行 */}
       <View className="flex-row py-3 border-b-[0.5px] border-b-[#d7d7d7] dark:border-b-[#323232]">
         {weekDays.map((day) => (
@@ -269,49 +163,28 @@ export default function MonthView({
           </View>
         ))}
       </View>
-      {monthArr !== undefined && (
-        <FlatList
-          // ==================== 数据源 ====================
-          data={monthArr}
-          renderItem={renderMonth}
-          keyExtractor={(item, index) => {
-            const firstDayOfMonth = item[0].find(
-              (date) => date.getDate() === 1
-            );
-            if (firstDayOfMonth) {
-              return `${firstDayOfMonth.getFullYear()}-${firstDayOfMonth.getMonth()}`;
-            }
-            return index.toString();
-          }}
-          // ==================== 布局方向 ====================
-          horizontal={true} // 横向滚动
-          // ==================== 分页行为 ====================
-          pagingEnabled={true} // 开启分页模式
-          snapToInterval={monthItemWidth} // 每次滑动一个屏幕宽度
-          snapToAlignment="start" // 对齐到起始位置
-          disableIntervalMomentum={true} // 禁用连续滑动（每次只滑一页）
-          // ==================== 滑动体验 ====================
-          decelerationRate="fast" // 快速减速停止
-          showsHorizontalScrollIndicator={false} // 隐藏横向滚动条
-          // ==================== 性能优化（渲染策略） ====================
-          updateCellsBatchingPeriod={200} // 批量更新间隔200ms
-          removeClippedSubviews={false} // 不移除屏幕外视图（避免闪烁）
-          // ==================== 性能优化（布局计算） ====================
-          getItemLayout={(_, index) => ({
-            // 预定义项目尺寸（跳过测量）
-            length: monthItemWidth, // 每项宽度
-            offset: monthItemWidth * index, // 偏移量
-            index, // 索引
-          })}
-          initialScrollIndex={monthArr.length / 2 - 1} // 初始滚动到第1个项目（从中间开始）
-          // ==================== 添加month事件并回滚 ====================
-          ref={monthFlatListRef}
-          onStartReachedThreshold={0.5}
-          onStartReached={unshiftMonth}
-          onEndReachedThreshold={0.5}
-          onEndReached={appendMonth}
-        />
-      )}
-    </ScrollView>
+      <FlatList
+        ref={monthFlatListRef}
+        data={months}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        renderItem={renderMonth}
+        keyExtractor={(_, i) => i.toString()}
+        initialScrollIndex={1}
+        getItemLayout={(_, i) => ({
+          length: SCREEN_WIDTH,
+          offset: SCREEN_WIDTH * i,
+          index: i,
+        })}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        decelerationRate="fast"
+        removeClippedSubviews={false}
+        maxToRenderPerBatch={3}
+        windowSize={3}
+        initialNumToRender={3}
+        updateCellsBatchingPeriod={50}
+      />
+    </View>
   );
 }

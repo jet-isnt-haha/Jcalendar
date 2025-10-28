@@ -62,7 +62,7 @@ export default function HomeScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 dark:bg-[#000000]">
         {/* 顶部标题栏 */}
-        <CalendarHeader />
+        <CalendarHeader selectedDate={selectedDate} />
         {/* 视图切换Tab */}
         <ViewTabs currentView={currentView} onViewChange={handleViewChange} />
         {/* 视图显示区域 */}

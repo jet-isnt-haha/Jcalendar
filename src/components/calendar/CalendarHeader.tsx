@@ -1,17 +1,19 @@
 import { getDateInfo } from "@/src/utils/dateHelper";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 /**
  * 日历顶部标题栏组件
  * 显示当前年月、周数，以及折叠和菜单按钮
  */
 
-export default function CalendarHeader() {
+interface CalendarHeaderProps {
+  selectedDate: Date;
+}
+
+export default function CalendarHeader({ selectedDate }: CalendarHeaderProps) {
   const { colorScheme, toggleColorScheme } = useColorScheme();
-  const [currentDate] = useState(new Date());
-  const { year, month, week } = getDateInfo(currentDate);
+  const { year, month, week } = getDateInfo(selectedDate);
 
   return (
     <View
