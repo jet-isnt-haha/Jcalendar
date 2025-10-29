@@ -8,6 +8,7 @@
  * @route /(tabs)/
  */
 import CalendarHeader from "@/src/components/calendar/CalendarHeader";
+import DayView from "@/src/components/calendar/DayView";
 import MonthView from "@/src/components/calendar/MonthView";
 import ViewTabs from "@/src/components/calendar/ViewTabs";
 import WeekView from "@/src/components/calendar/WeekView";
@@ -29,14 +30,17 @@ export default function HomeScreen() {
   //返回对应key的视图组件的对象
   const viewComponents = useMemo(
     () => ({
+      year: <View className="flex-1" />,
       month: (
         <MonthView selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       ),
       week: (
         <WeekView selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       ),
-      year: <View className="flex-1" />,
-      day: <View className="flex-1" />,
+      day: (
+        <DayView selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+      ),
+
       agenda: <View className="flex-1" />,
     }),
     [selectedDate]

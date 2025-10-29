@@ -83,7 +83,8 @@ Jcalendar/
 │   ├── contexts/          # React Context
 │   ├── hooks/             # 自定义 Hooks
 │   ├── styles/            # 主题配置
-│   └── utils/             # 工具函数
+│   ├── utils/             # 工具函数
+|   └── contants/          # 常用常量
 └── assets/                # 静态资源
 ```
 
@@ -126,13 +127,13 @@ HomeScreen
     ├── MonthView (月视图) ✅
     ├── WeekView (周视图) ✅
     ├── YearView (年视图) 🚧
-    ├── DayView (日视图) 🚧
+    ├── DayView (日视图) ✅
     └── AgendaView (日程视图) 🚧
 ```
 
 ---
 
-### 2. 月视图 (`src/components/calendar/MonthView.tsx`)
+### 2. 月视图 (`src/components/calendar/MonthCalendar.tsx`)
 
 **基础属性与基本元素**
 
@@ -477,7 +478,7 @@ export function getHoliday_CN(date: Date) {
 
 ---
 
-### 6. 周视图 (`src/components/calendar/WeekView.tsx`)
+### 6. 周视图 (`src/components/calendar/WeekCalendar.tsx`)
 
 > 参考实现：[How to make a horizontal calendar slider in React Native with Flatlist (long story)](https://a2nb.medium.com/how-to-make-a-horizontal-calendar-slider-in-react-native-with-flatlist-f1797ffa4dee)(ps:月视图也有一部分参考)
 
