@@ -46,17 +46,15 @@ export default function WeekView({
   onDateSelect,
 }: WeekViewProps) {
   const [todayDate] = useState<Date>(new Date());
-  const [currentDate, setCurrentDate] = useState<Date>(
-    startOfWeek(selectedDate)
-  );
   const weekFlatListRef = useRef<FlatList>(null);
   const isScrollingRef = useRef(false);
   const weeks = useMemo(() => {
-    const prev = generateMonthWeek(subWeeks(currentDate, 1));
-    const current = generateMonthWeek(currentDate);
-    const next = generateMonthWeek(addWeeks(currentDate, 1));
+    const prev = generateMonthWeek(subWeeks(selectedDate, 1));
+    const current = generateMonthWeek(selectedDate);
+    const next = generateMonthWeek(addWeeks(selectedDate, 1));
     return [prev, current, next];
-  }, [currentDate]);
+  }, [selectedDate]);
+
   //星期标题
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -70,9 +68,10 @@ export default function WeekView({
         screenWidth={SCREEN_WIDTH}
         todayDate={todayDate}
         selectedDate={selectedDate}
+        handlePress={onDateSelect}
       />
     ),
-    [selectedDate, todayDate]
+    [selectedDate, todayDate, onDateSelect]
   );
   /**
    * FlatList onMomentumScrollEnd方法函数
@@ -95,19 +94,17 @@ export default function WeekView({
 
       if (page === 2) {
         isScrollingRef.current = true;
-        const next = addWeeks(currentDate, 1);
-        setCurrentDate(next);
+        const next = addWeeks(selectedDate, 1);
         onDateSelect(next);
         weekFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
       } else if (page === 0) {
         isScrollingRef.current = true;
-        const prev = subWeeks(currentDate, 1);
-        setCurrentDate(prev);
+        const prev = subWeeks(selectedDate, 1);
         onDateSelect(prev);
         weekFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
       }
     },
-    [currentDate]
+    [selectedDate, onDateSelect]
   );
 
   return (

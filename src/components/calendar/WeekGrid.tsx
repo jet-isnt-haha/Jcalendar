@@ -7,6 +7,7 @@ interface WeekGridProps {
   screenWidth: number;
   selectedDate: Date;
   todayDate: Date;
+  handlePress: (date: Date) => void;
 }
 
 /**
@@ -23,12 +24,13 @@ function WeekGrid({
   screenWidth,
   selectedDate,
   todayDate,
+  handlePress,
 }: WeekGridProps) {
   return (
     <View style={{ width: screenWidth }} className="">
       <View className="flex-row items-center justify-around px-3">
         {week.map((dateInfo, index) => (
-          <View key={dateInfo.toISOString()} className="">
+          <View key={dateInfo.toISOString()} className="flex-1">
             <DateCell
               dateInfo={dateInfo}
               isCurrentMonth={true}
@@ -42,7 +44,7 @@ function WeekGrid({
                 dateInfo.getMonth() === todayDate.getMonth() &&
                 dateInfo.getFullYear() === todayDate.getFullYear()
               }
-              onPress={() => console.log("pressed")}
+              onPress={handlePress}
             />
           </View>
         ))}

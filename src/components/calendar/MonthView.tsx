@@ -84,17 +84,14 @@ export default function MonthView({
   onDateSelect,
 }: MonthViewProps) {
   const [todayDate] = useState<Date>(new Date());
-  const [currentDate, setCurrentDate] = useState<Date>(
-    startOfMonth(selectedDate)
-  );
   const monthFlatListRef = useRef<FlatList>(null);
   const isScrollingRef = useRef(false);
   const months = useMemo(() => {
-    const prev = generateMonthWeeks(subMonths(currentDate, 1));
-    const current = generateMonthWeeks(currentDate);
-    const next = generateMonthWeeks(addMonths(currentDate, 1));
+    const prev = generateMonthWeeks(subMonths(startOfMonth(selectedDate), 1));
+    const current = generateMonthWeeks(startOfMonth(selectedDate));
+    const next = generateMonthWeeks(addMonths(startOfMonth(selectedDate), 1));
     return [prev, current, next];
-  }, [currentDate]);
+  }, [selectedDate]);
 
   //星期标题
   const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
@@ -110,9 +107,10 @@ export default function MonthView({
         screenWidth={SCREEN_WIDTH}
         todayDate={todayDate}
         selectedDate={selectedDate}
+        handlePress={onDateSelect}
       />
     ),
-    [selectedDate, todayDate]
+    [selectedDate, todayDate, onDateSelect]
   );
 
   /**
@@ -137,19 +135,17 @@ export default function MonthView({
 
       if (page === 2) {
         isScrollingRef.current = true;
-        const next = addMonths(currentDate, 1);
-        setCurrentDate(next);
+        const next = addMonths(startOfMonth(selectedDate), 1);
         onDateSelect(next);
         monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
       } else if (page === 0) {
         isScrollingRef.current = true;
-        const prev = subMonths(currentDate, 1);
-        setCurrentDate(prev);
+        const prev = subMonths(startOfMonth(selectedDate), 1);
         onDateSelect(prev);
         monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
       }
     },
-    [currentDate]
+    [selectedDate, onDateSelect]
   );
 
   return (

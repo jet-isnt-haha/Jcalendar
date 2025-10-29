@@ -11,6 +11,7 @@ interface MonthGridProps {
   screenWidth: number;
   todayDate: Date;
   selectedDate: Date;
+  handlePress: (date: Date) => void;
 }
 
 /**
@@ -23,6 +24,7 @@ interface MonthGridProps {
  * @param screenWidth - 屏幕宽度，用于将MonthView填满FlatList
  * @param todayDate - 今日日期
  * @param selectedDate - 被选中的日期
+ * @param handlePress - 处理DateCell点击事件
  */
 function MonthGrid({
   weeks,
@@ -30,6 +32,7 @@ function MonthGrid({
   screenWidth,
   todayDate,
   selectedDate,
+  handlePress,
 }: MonthGridProps) {
   return (
     <View style={{ width: screenWidth }} className="gap-y-4">
@@ -85,7 +88,7 @@ function MonthGrid({
                   dateInfo.getMonth() === todayDate.getMonth() &&
                   dateInfo.getFullYear() === todayDate.getFullYear()
                 }
-                onPress={() => console.log("pressed")}
+                onPress={handlePress}
               />
             )
           )}

@@ -124,7 +124,7 @@ HomeScreen
 ├── ViewTabs (视图切换 Tab)
 └── 视图容器
     ├── MonthView (月视图) ✅
-    ├── WeekView (周视图) 🚧
+    ├── WeekView (周视图) ✅
     ├── YearView (年视图) 🚧
     ├── DayView (日视图) 🚧
     └── AgendaView (日程视图) 🚧
@@ -144,10 +144,6 @@ interface MonthViewProps {
 }
 
 const [todayDate] = useState<Date>(new Date());
-//当前日期通过切换月视图进行变换，（通常为某月一日）
-const [currentDate, setCurrentDate] = useState<Date>(
-  startOfMonth(selectedDate)
-);
 const monthFlatListRef = useRef<FlatList>(null);
 //防抖标志ref
 const isScrollingRef = useRef(false);
@@ -304,18 +300,16 @@ const handleMomentumScrollEnd = useCallback(
     if (page === 2) {
       isScrollingRef.current = true;
       const next = addMonths(currentDate, 1);
-      setCurrentDate(next);
       onDateSelect(next);
       monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
     } else if (page === 0) {
       isScrollingRef.current = true;
       const prev = subMonths(currentDate, 1);
-      setCurrentDate(prev);
       onDateSelect(prev);
       monthFlatListRef.current?.scrollToIndex({ index: 1, animated: false });
     }
   },
-  [currentDate]
+  [selectedDate]
 );
 
 //FlatList内部
@@ -337,6 +331,7 @@ interface MonthGridProps {
   screenWidth: number;
   todayDate: Date;
   selectedDate: Date;
+  handlePress: (date: Date) => void;
 }
 //dateInfo若为空则返回空单元格。
   {weeks.map((week, index) => (
@@ -482,9 +477,114 @@ export function getHoliday_CN(date: Date) {
 
 ---
 
-### 5. 周视图 (`src/components/calendar/WeekView.tsx`)
+### 6. 周视图 (`src/components/calendar/WeekView.tsx`)
 
 > 参考实现：[How to make a horizontal calendar slider in React Native with Flatlist (long story)](https://a2nb.medium.com/how-to-make-a-horizontal-calendar-slider-in-react-native-with-flatlist-f1797ffa4dee)(ps:月视图也有一部分参考)
+
+**基础属性与基本元素**
+
+```typescript
+//组件类型定义
+interface WeekViewProps {
+  selectedDate: Date;
+  onDateSelect: (date: Date) => void;
+}
+
+const [todayDate] = useState<Date>(new Date());
+const weekFlatListRef = useRef<FlatList>(null);
+const isScrollingRef = useRef(false);
+const weeks = useMemo(() => {
+  const prev = generateMonthWeek(subWeeks(selectedDate, 1));
+  const current = generateMonthWeek(selectedDate);
+  const next = generateMonthWeek(addWeeks(selectedDate, 1));
+  return [prev, current, next];
+}, [selectedDate]);
+```
+
+**核心功能**
+
+- 显示当前周的日历网格
+- 支持横向滑动切换周（前/当前/后）
+- 显示农历日期和节假日信息
+
+**技术实现**
+
+> 由于实现细节与月视图相近故只讨论特殊部分
+
+#### 6.1 切换周视图逻辑
+
+当触发`<FlatList/>`组件的`onMomentumScrollEnd`方法时
+
+```typescript
+{
+  const next = addWeeks(selectedDate, 1);
+  onDateSelect(next);
+}
+//切换周视图前后周时选中的date与前后getDay()相同
+//故周数组与月数组的实现也有所区别
+{
+  //周视图 FlatList的data
+  const weeks = useMemo(() => {
+    const prev = generateMonthWeek(subWeeks(selectedDate, 1));
+    const current = generateMonthWeek(selectedDate);
+    const next = generateMonthWeek(addWeeks(selectedDate, 1));
+    return [prev, current, next];
+  }, [selectedDate]);
+  //月视图FlatList的data
+  const months = useMemo(() => {
+    const prev = generateMonthWeeks(subMonths(startOfMonth(selectedDate), 1));
+    const current = generateMonthWeeks(startOfMonth(selectedDate));
+    const next = generateMonthWeeks(addMonths(startOfMonth(selectedDate), 1));
+    return [prev, current, next];
+  }, [selectedDate]);
+}
+```
+
+#### 6.2 月视图网格组件
+
+```typescript
+import { memo } from "react";
+import { View } from "react-native";
+import DateCell from "./DateCell";
+
+interface WeekGridProps {
+  week: Date[];
+  screenWidth: number;
+  selectedDate: Date;
+  todayDate: Date;
+  handlePress: (date: Date) => void;
+}
+
+/**
+ * 周网格组件
+ *
+ * 渲染单个周的日历网格，包含该周的所有天
+ *
+ * @param week - 周数组
+ * @param screenWidth - 屏幕宽度
+ * @param selectedDate -  被选中的日期
+ */
+function WeekGrid({
+  week,
+  screenWidth,
+  selectedDate,
+  todayDate,
+  handlePress,
+}: WeekGridProps) {
+  return (
+    <View style={{ width: screenWidth }} className="">
+      <View className="flex-row items-center justify-around px-3">
+        {week.map((dateInfo, index) => (
+          <View key={dateInfo.toISOString()} className="flex-1">
+            //...
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+export default memo(WeekGrid);
+```
 
 ---
 
