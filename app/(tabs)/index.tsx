@@ -12,6 +12,8 @@ import DayView from "@/src/components/calendar/DayView";
 import MonthView from "@/src/components/calendar/MonthView";
 import ViewTabs from "@/src/components/calendar/ViewTabs";
 import WeekView from "@/src/components/calendar/WeekView";
+import Button from "@/src/components/common/Button";
+import EventCard from "@/src/components/event/EventCard";
 import { useViewCache } from "@/src/hooks/useViewCache";
 import { Stack } from "expo-router";
 import { useMemo, useState } from "react";
@@ -41,7 +43,19 @@ export default function HomeScreen() {
         <DayView selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       ),
 
-      agenda: <View className="flex-1" />,
+      agenda: (
+        <>
+          <EventCard
+            event={{
+              title: "上课",
+              remark: "上数学课",
+              startTime: new Date(),
+              endTime: new Date(),
+            }}
+          />
+          <Button iconName="add-outline" iconSize={24} />
+        </>
+      ),
     }),
     [selectedDate]
   );

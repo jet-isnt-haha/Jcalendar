@@ -1,17 +1,9 @@
-import { HolidaysTypes } from "date-holidays";
 import { ScrollView, Text, View } from "react-native";
-import { Solar2lunar } from "solarlunar-es";
 import MonthCalendar from "./MonthCalendar";
 
 interface MonthViewProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
-}
-
-export interface DateInfo {
-  date: Date;
-  lunarInfo?: Solar2lunar;
-  holiday?: HolidaysTypes.Holiday[] | false;
 }
 
 export default function MonthView({

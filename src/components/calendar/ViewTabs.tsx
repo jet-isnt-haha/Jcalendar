@@ -1,15 +1,10 @@
 import type { ViewType } from "@/app/(tabs)";
 import { Text, TouchableOpacity, View } from "react-native";
+import { TabItem } from "./types";
 
 interface ViewTabsProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
-}
-
-/** 视图Tab类型定义 */
-interface TabItem {
-  key: ViewType;
-  label: string;
 }
 
 const tabs: TabItem[] = [
