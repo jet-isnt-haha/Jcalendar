@@ -15,9 +15,9 @@ export default function Button({
 }: ButtonProps) {
   return (
     <Pressable
-      className={`rounded-full aspect-square items-center justify-center  bg-blue-400 w-[${
-        iconSize + 16
-      }px] h-[${iconSize + 16}px]`}
+      className={`rounded-full aspect-square items-center justify-center  bg-blue-400 w`}
+      style={{ width: iconSize + 16 }}
+      onPress={onPress}
     >
       <Ionicons name={iconName} size={24} color={"#FFFFFF"} />
     </Pressable>

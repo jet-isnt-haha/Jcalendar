@@ -15,7 +15,7 @@ import WeekView from "@/src/components/calendar/WeekView";
 import Button from "@/src/components/common/Button";
 import EventCard from "@/src/components/event/EventCard";
 import { useViewCache } from "@/src/hooks/useViewCache";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useMemo, useState } from "react";
 import { View } from "react-native";
 
@@ -53,7 +53,13 @@ export default function HomeScreen() {
               endTime: new Date(),
             }}
           />
-          <Button iconName="add-outline" iconSize={24} />
+          <Button
+            iconName="add-outline"
+            iconSize={24}
+            onPress={() => {
+              router.push("/event/create");
+            }}
+          />
         </>
       ),
     }),

@@ -6,6 +6,10 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="event" options={{ presentation: "modal" }} />
+      <Stack.Screen
+        name="event/create"
+        options={{ presentation: "formSheet" }}
+      />
     </Stack>
   );
 }
