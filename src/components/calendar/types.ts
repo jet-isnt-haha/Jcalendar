@@ -1,6 +1,6 @@
-import { ViewType } from "@/app/(tabs)";
 import { HolidaysTypes } from "date-holidays";
 import { Solar2lunar } from "solarlunar-es";
+import { ViewType } from "~/(tabs)";
 
 export interface DateInfo {
   date: Date;

@@ -1,4 +1,4 @@
-import { SCREEN_WIDTH } from "@/src/constants";
+import { SCREEN_WIDTH } from "@/constants";
 import {
   addMonths,
   eachDayOfInterval,

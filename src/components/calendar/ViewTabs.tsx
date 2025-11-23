@@ -1,5 +1,5 @@
-import type { ViewType } from "@/app/(tabs)";
 import { Text, TouchableOpacity, View } from "react-native";
+import type { ViewType } from "~/(tabs)";
 import { TabItem } from "./types";
 
 interface ViewTabsProps {
