@@ -28,3 +28,13 @@ export interface eventInfo {
   id: number;
   event: event;
 }
+
+export type FormFields = {
+  event_title: string;
+  start_time: Date;
+  end_time: Date;
+  mark: string;
+};
+
+// 定义当前正在编辑的日期字段类型
+export type DateField = "start_time" | "end_time";
