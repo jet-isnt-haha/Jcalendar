@@ -1,5 +1,5 @@
 import { ScrollView, Text, View } from "react-native";
-import MonthCalendar from "./MonthCalendar";
+import MonthCalendar from "../../components/MonthCalendar";
 
 interface MonthViewProps {
   selectedDate: Date;

@@ -7,14 +7,14 @@
  * @page
  * @route /(tabs)/
  */
-import CalendarHeader from "@/components/calendar/CalendarHeader";
-import DayView from "@/components/calendar/DayView";
-import MonthView from "@/components/calendar/MonthView";
-import ViewTabs from "@/components/calendar/ViewTabs";
-import WeekView from "@/components/calendar/WeekView";
-import Button from "@/components/common/Button";
-import EventCard from "@/components/event/EventCard";
+import CalendarHeader from "@/components/CalendarHeader";
+import Button from "@/components/Common/Button";
+import EventCard from "@/components/EventCard";
+import ViewTabs from "@/components/ViewTabs";
 import { useViewCache } from "@/hooks/useViewCache";
+import DayView from "@/pages/DayView";
+import MonthView from "@/pages/MonthView";
+import WeekView from "@/pages/WeekView";
 import { router, Stack } from "expo-router";
 import { useMemo, useState } from "react";
 import { View } from "react-native";

@@ -1,5 +1,5 @@
+import { event } from "@/types";
 import { Text, View } from "react-native";
-import { event } from "./types";
 
 interface EventCardProps {
   event: event;

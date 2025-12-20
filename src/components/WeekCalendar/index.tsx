@@ -13,7 +13,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from "react-native";
-import WeekGrid from "./WeekGrid";
+import WeekGrid from "./components/WeekGrid";
 
 interface WeekCalendarProps {
   selectedDate: Date;

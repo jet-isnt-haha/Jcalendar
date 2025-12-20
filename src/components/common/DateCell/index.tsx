@@ -1,3 +1,4 @@
+import { event } from "@/types";
 import { format } from "date-fns";
 import { GestureResponderEvent, Pressable, Text, View } from "react-native";
 interface DateCellProps {
@@ -6,6 +7,7 @@ interface DateCellProps {
   isSelected: boolean;
   isToday: boolean;
   onPress: (date: Date) => void;
+  hasEvent?: event | null;
 }
 
 function DateCell({
@@ -14,6 +16,7 @@ function DateCell({
   isSelected = false,
   isToday = false,
   onPress,
+  hasEvent = null,
 }: DateCellProps) {
   const date = dateInfo;
   const dayNumber = format(date, "d");
@@ -31,7 +34,7 @@ function DateCell({
       onPress={handlePress}
     >
       <View className="flex-1 items-center justify-center">
-        {/* 公里日期 */}
+        {/* 公历日期 */}
         <View
           className={`w-8 h-8 rounded-full items-center justify-center mb-0.5  ${
             isSelected && !isToday && "bg-[#696969] dark:bg-[#adb7c2]"
@@ -46,19 +49,9 @@ function DateCell({
           >
             {dayNumber}
           </Text>
-          {/* 农历日期 */}
-          {/* <Text
-            className={`text-[9px] font-medium  dark:text-white ${
-              isSelected && "text-white "
-            }  ${
-              isToday && !isSelected && "text-[#007AFF] dark:text-[#007AFF]"
-            } `}
-          >
-            {holiday === false ? lunarText : holiday[0].name}
-          </Text> */}
+          {/* 事件指示点 */}
+          <View className="w-2/5 h-1 bg-red-500 "></View>
         </View>
-        {/* 事件指示点 */}
-        {/*   <View className=""></View> */}
       </View>
     </Pressable>
   );

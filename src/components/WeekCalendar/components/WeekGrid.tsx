@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { View } from "react-native";
-import DateCell from "./DateCell";
+import DateCell from "../../Common/DateCell";
 
 interface WeekGridProps {
   week: Date[];

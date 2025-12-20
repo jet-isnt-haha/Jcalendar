@@ -1,5 +1,5 @@
 import { ScrollView, Text, View } from "react-native";
-import WeekCalendar from "./WeekCalendar";
+import WeekCalendar from "../../components/WeekCalendar";
 
 interface DayView {
   selectedDate: Date;

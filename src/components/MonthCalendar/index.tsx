@@ -13,7 +13,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from "react-native";
-import MonthGrid from "./MonthGrid";
+import MonthGrid from "./components/MonthGrid";
 
 interface MonthCalendarProps {
   selectedDate: Date;

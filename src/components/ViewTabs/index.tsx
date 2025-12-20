@@ -1,6 +1,6 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import type { ViewType } from "~/(tabs)";
-import { TabItem } from "./types";
+import { TabItem } from "../../types";
 
 interface ViewTabsProps {
   currentView: ViewType;

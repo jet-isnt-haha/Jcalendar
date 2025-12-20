@@ -1,6 +1,7 @@
+import { event } from "@/types";
 import { memo } from "react";
 import { Text, View } from "react-native";
-import DateCell from "./DateCell";
+import DateCell from "../../Common/DateCell";
 
 /**
  * 月视图网格类型定义
@@ -12,6 +13,7 @@ interface MonthGridProps {
   todayDate: Date;
   selectedDate: Date;
   handlePress: (date: Date) => void;
+  hasEvent?: event | null;
 }
 
 /**
@@ -33,6 +35,7 @@ function MonthGrid({
   todayDate,
   selectedDate,
   handlePress,
+  hasEvent = null,
 }: MonthGridProps) {
   return (
     <View style={{ width: screenWidth }} className="gap-y-4">
@@ -55,23 +58,12 @@ function MonthGrid({
                     <Text
                       className={`text-[17px] font-medium  dark:text-white  `}
                     ></Text>
-                    {/* 农历日期 */}
-                    {/* <Text
-            className={`text-[9px] font-medium  dark:text-white ${
-              isSelected && "text-white "
-            }  ${
-              isToday && !isSelected && "text-[#007AFF] dark:text-[#007AFF]"
-            } `}
-          >
-            {holiday === false ? lunarText : holiday[0].name}
-          </Text> */}
                   </View>
-                  {/* 事件指示点 */}
-                  {/*   <View className=""></View> */}
                 </View>
               </View>
             ) : (
               <DateCell
+                hasEvent={hasEvent}
                 key={dateInfo.toISOString()}
                 dateInfo={dateInfo}
                 isCurrentMonth={
