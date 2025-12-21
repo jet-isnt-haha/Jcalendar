@@ -50,7 +50,11 @@ function DateCell({
             {dayNumber}
           </Text>
           {/* 事件指示点 */}
-          <View className="w-2/5 h-1 bg-red-500 "></View>
+          <View
+            className={`w-3/5 h-0.5 ${
+              isSelected ? "bg-white" : "bg-[#007AFF]"
+            }`}
+          />
         </View>
       </View>
     </Pressable>
